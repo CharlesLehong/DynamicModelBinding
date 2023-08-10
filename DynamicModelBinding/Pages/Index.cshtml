@@ -1,0 +1,55 @@
+﻿@page
+@using DynamicModelBinding.Services;
+@using Microsoft.AspNetCore.Antiforgery;
+@model IndexModel
+@inject IAntiforgery antiforgery
+@{
+    ViewData["Title"] = "Home page";
+    var token = antiforgery.GetAndStoreTokens(HttpContext).RequestToken;
+
+    string[] ids = new string[] { "58a04815-4c56-407c-985f-9e3f2f3e089f" };
+}
+
+@section Scripts {
+    <script type="text/javascript">
+
+        $(document).ready(function() {
+            const images = $(".post-image");
+            images.each(function(){
+                const id = $(this).attr("id");
+                fetchImage(id);
+
+            })
+        })
+
+        function fetchImage(id) {
+            $.ajax({
+                type: "GET",
+                url: `/?handler=Image&contentFileId=${id}`,
+                beforeSend: (xhr) => {
+                    xhr.setRequestHeader("X-CSRF-TOKEN", $('input:hidden[name="__RequestVerificationToken"]').val());
+                },
+                success: (data) => {
+                    console.log(data)
+                    $(`.post-image#${id}`).attr('src', `data:${data.contentType};base64,${data.content}`);
+                },
+                error: (_, status, error) => {
+                    console.error("Failed to get content file markup:", status, error);
+                }
+            });
+        }
+        
+    </script>
+}
+
+<div class="container" id="container">
+    <input type="text" name="__RequestVerificationToken" value="@token" hidden />
+    
+    <img class="post-image" id="1" width="500" height="500" />
+    <img class="post-image" id="2" width="500" height="500" />
+        
+
+</div>
+
+<button id="btn" onclick="ShowMore()">Show more</button>
+
